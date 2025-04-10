@@ -7,8 +7,6 @@ pub use models::*;
 
 #[cfg(desktop)]
 mod desktop;
-#[cfg(mobile)]
-mod mobile;
 
 mod commands;
 mod error;
@@ -18,8 +16,6 @@ pub use error::{Error, Result};
 
 #[cfg(desktop)]
 use desktop::Vicons;
-#[cfg(mobile)]
-use mobile::Vicons;
 
 /// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the vicons APIs.
 pub trait ViconsExt<R: Runtime> {
@@ -35,10 +31,8 @@ impl<R: Runtime, T: Manager<R>> crate::ViconsExt<R> for T {
 /// Initializes the plugin.
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
   Builder::new("vicons")
-    .invoke_handler(tauri::generate_handler![commands::ping])
+    .invoke_handler(tauri::generate_handler![commands::get_icon, commands::get_symbol])
     .setup(|app, api| {
-      #[cfg(mobile)]
-      let vicons = mobile::init(app, api)?;
       #[cfg(desktop)]
       let vicons = desktop::init(app, api)?;
       app.manage(vicons);
