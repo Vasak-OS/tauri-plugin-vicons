@@ -1,8 +1,8 @@
 [package]
 name = "tauri-plugin-vicons"
-version = "0.1.0"
-authors = [ "You" ]
-description = ""
+version = "2.0.0"
+authors = ["Joaquin (Pato) Decima <jdecima@vasak.net.ar>", "Vasak Group"]
+description = "Icon API for Tauri plugins (Created for VasakOS)"
 edition = "2021"
 rust-version = "1.77.2"
 exclude = ["/examples", "/dist-js", "/guest-js", "/node_modules"]

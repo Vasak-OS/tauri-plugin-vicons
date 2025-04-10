@@ -1,6 +1,6 @@
 {
   "name": "tauri-plugin-vicons-api",
-  "version": "0.0.1",
+  "version": "2.0.0",
   "author": "Joaquin (Pato) Decima <joaquin.decima@vasak.net.ar>",
   "description": "Icon API for Tauri plugins (Created for VasakOS)",
   "type": "module",
