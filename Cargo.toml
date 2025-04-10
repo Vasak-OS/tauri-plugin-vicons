@@ -12,8 +12,8 @@ links = "tauri-plugin-vicons"
 tauri = { version = "2" }
 serde = "1.0"
 thiserror = "2"
-gtk = "0.18.1"
-base64 = "0.21.1"
+gtk = "0.18"
+base64 = "0.21"
 
 [build-dependencies]
 tauri-plugin = { version = "2", features = ["build"] }
