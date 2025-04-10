@@ -4,7 +4,7 @@ use gtk::prelude::IconThemeExt;
 use std::fs;
 
 #[tauri::command]
-pub(crate) fn get_icon(name: &str) -> Result<String, String> {
+pub fn get_icon(name: &str) -> Result<String, String> {
     let themed = gtk::IconTheme::default().unwrap();
     let mut themed_icon = themed.lookup_icon(
         name,
@@ -27,7 +27,7 @@ pub(crate) fn get_icon(name: &str) -> Result<String, String> {
 }
 
 #[tauri::command]
-pub(crate) fn get_symbol(name: &str) -> Result<String, String> {
+pub fn get_symbol(name: &str) -> Result<String, String> {
     let themed = gtk::IconTheme::default().unwrap();
 
     let mut themed_icon = themed
