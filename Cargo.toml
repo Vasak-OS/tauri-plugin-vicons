@@ -9,11 +9,11 @@ exclude = ["/examples", "/dist-js", "/guest-js", "/node_modules"]
 links = "tauri-plugin-vicons"
 
 [dependencies]
-tauri = { version = "2.4.1" }
+tauri = { version = "2" }
 serde = "1.0"
 thiserror = "2"
 gtk = "0.18.1"
 base64 = "0.21.1"
 
 [build-dependencies]
-tauri-plugin = { version = "2.1.1", features = ["build"] }
+tauri-plugin = { version = "2", features = ["build"] }
