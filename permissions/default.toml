@@ -1,5 +1,3 @@
-[[permission]]
-identifier = "default"
-description = "Default permission for all users"
-default = true
-commands.allow = ["*"]
+[default]
+description = "Default permissions for the plugin"
+permissions = ["allow-get_icon", "allow-get_symbol"]

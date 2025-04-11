@@ -295,22 +295,34 @@
       "type": "string",
       "oneOf": [
         {
-          "description": "Enables the ping command without any pre-configured scope.",
+          "description": "Enables the get_icon command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-ping",
-          "markdownDescription": "Enables the ping command without any pre-configured scope."
+          "const": "allow-get_icon",
+          "markdownDescription": "Enables the get_icon command without any pre-configured scope."
         },
         {
-          "description": "Denies the ping command without any pre-configured scope.",
+          "description": "Denies the get_icon command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-ping",
-          "markdownDescription": "Denies the ping command without any pre-configured scope."
+          "const": "deny-get_icon",
+          "markdownDescription": "Denies the get_icon command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`",
+          "description": "Enables the get_symbol command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get_symbol",
+          "markdownDescription": "Enables the get_symbol command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_symbol command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get_symbol",
+          "markdownDescription": "Denies the get_symbol command without any pre-configured scope."
+        },
+        {
+          "description": "Default permission for all users",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-ping`"
+          "markdownDescription": "Default permission for all users"
         }
       ]
     }
