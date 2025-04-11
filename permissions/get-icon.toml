@@ -1,8 +1,0 @@
-"$schema" = "schemas/schema.json"
-
-[[permission]]
-identifier = "get-icon"
-description = "This enables the get_icon command"
-commands.allow = [
-    "get_icon",
-]
