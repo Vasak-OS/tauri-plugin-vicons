@@ -1,21 +1,23 @@
 import { invoke } from "@tauri-apps/api/core";
 
 // Get icon from Linux in base64
-async function getIcon(value: string): Promise<string> {
-  return invoke<{ value?: string }>("plugin:vicons|get_icon", {
-    payload: {
-      value,
-    },
-  }).then((r: any) => r.value);
+async function getIcon(name: string): Promise<string> {
+  try {
+    return await invoke("plugin:vicons|get_icon", { name });
+  } catch (error) {
+    console.error("[Icon Error] Error obteniendo icono:", error);
+  }
+  return "";
 }
 
 // Get Symbol from Linux in base64
-async function getSymbol(value: string): Promise<string> {
-  return invoke<{ value?: string }>("plugin:vicons|get_symbol", {
-    payload: {
-      value,
-    },
-  }).then((r: any) => r.value);
+async function getSymbol(name: string): Promise<string> {
+  try {
+    return await invoke("plugin:vicons|get_symbol", { name });
+  } catch (error) {
+    console.error("[Icon Error] Error obteniendo simbolo:", error);
+  }
+  return "";
 }
 
 // Get icon type from base64
