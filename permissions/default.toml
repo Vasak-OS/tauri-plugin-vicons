@@ -1,3 +1,5 @@
-[default]
-description = "Default permissions for the plugin"
-permissions = ["allow-ping"]
+[[permission]]
+identifier = "default"
+description = "Default permission for all users"
+default = true
+commands.allow = ["*"]
