@@ -3,11 +3,11 @@
 "$schema" = "../../schemas/schema.json"
 
 [[permission]]
-identifier = "allow-get_icon"
+identifier = "allow-get-icon"
 description = "Enables the get_icon command without any pre-configured scope."
 commands.allow = ["get_icon"]
 
 [[permission]]
-identifier = "deny-get_icon"
+identifier = "deny-get-icon"
 description = "Denies the get_icon command without any pre-configured scope."
 commands.deny = ["get_icon"]

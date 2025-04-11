@@ -14,9 +14,5 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
 pub struct Vicons<R: Runtime>(AppHandle<R>);
 
 impl<R: Runtime> Vicons<R> {
-  pub fn ping(&self, payload: PingRequest) -> crate::Result<PingResponse> {
-    Ok(PingResponse {
-      value: payload.value,
-    })
-  }
+
 }

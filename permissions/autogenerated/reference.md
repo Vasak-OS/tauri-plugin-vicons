@@ -1,3 +1,11 @@
+## Default Permission
+
+Default permissions for the plugin
+
+#### This default permission set includes the following:
+
+- `allow-get-icon`
+- `allow-get-symbol`
 
 ## Permission Table
 
@@ -11,25 +19,12 @@
 <tr>
 <td>
 
-`vicons:allow-ping`
+`vicons:allow-get-icon`
 
 </td>
 <td>
 
-Enables the ping command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`vicons:deny-ping`
-
-</td>
-<td>
-
-Denies the ping command without any pre-configured scope.
+Enables the get_icon command without any pre-configured scope.
 
 </td>
 </tr>
@@ -37,12 +32,38 @@ Denies the ping command without any pre-configured scope.
 <tr>
 <td>
 
-`vicons:default`
+`vicons:deny-get-icon`
 
 </td>
 <td>
 
-Default permission for all users
+Denies the get_icon command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`vicons:allow-get-symbol`
+
+</td>
+<td>
+
+Enables the get_symbol command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`vicons:deny-get-symbol`
+
+</td>
+<td>
+
+Denies the get_symbol command without any pre-configured scope.
 
 </td>
 </tr>
