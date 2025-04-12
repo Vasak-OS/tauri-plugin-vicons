@@ -1,5 +1,5 @@
 {
-  "name": "tauri-plugin-vicons-api",
+  "name": "@vasakgroup/plugin-vicons",
   "version": "2.0.0",
   "author": "Joaquin (Pato) Decima <joaquin.decima@vasak.net.ar>",
   "description": "Icon API for Tauri plugins (Created for VasakOS)",
@@ -29,5 +29,16 @@
     "rollup": "^4.9.6",
     "typescript": "^5.3.3",
     "tslib": "^2.6.2"
-  }
+  },
+  "repository": {"url": "https://github.com/Vasak-OS/tauri-plugin-vicons/", "type": "git"},
+  "license": "GPLv3",
+  "keywords": [
+    "tauri",
+    "plugin",
+    "vicons",
+    "vasak",
+    "vasakos",
+    "icon",
+    "linux"
+  ]  
 }
