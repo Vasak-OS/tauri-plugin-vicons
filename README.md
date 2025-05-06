@@ -17,7 +17,7 @@ tauri-plugin-vicons = { git = "https://github.com/Vasak-OS/tauri-plugin-vicons",
 In `main.rs` or `lib.rs`, add the following to your `tauri::Builder`:
 
 ```rust
-use tauri_plugin_vicons::ViconsPlugin;
+use tauri_plugin_vicons;
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_vicons::init()) // this line
