@@ -22,15 +22,18 @@
     "pretest": "bun run build"
   },
   "dependencies": {
-    "@tauri-apps/api": ">=2.0.0-beta.6"
+    "@tauri-apps/api": "^2.5.0"
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.6",
-    "rollup": "^4.9.6",
-    "typescript": "^5.3.3",
-    "tslib": "^2.6.2"
+    "rollup": "^4.44.0",
+    "typescript": "^5.8.3",
+    "tslib": "^2.8.1"
   },
-  "repository": {"url": "https://github.com/Vasak-OS/tauri-plugin-vicons/", "type": "git"},
+  "repository": {
+    "url": "https://github.com/Vasak-OS/tauri-plugin-vicons/",
+    "type": "git"
+  },
   "license": "GPLv3",
   "keywords": [
     "tauri",
@@ -40,5 +43,5 @@
     "vasakos",
     "icon",
     "linux"
-  ]  
+  ]
 }
