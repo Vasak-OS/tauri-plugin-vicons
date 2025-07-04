@@ -2,7 +2,6 @@ use tauri::{
     plugin::{Builder, TauriPlugin},
     Manager, Runtime,
 };
-
 mod desktop;
 
 mod commands;

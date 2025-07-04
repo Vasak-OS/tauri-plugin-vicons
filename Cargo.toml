@@ -12,11 +12,11 @@ license-file = "LICENSE"
 readme = "README.md"
 
 [dependencies]
-tauri = "2"
+tauri = "2.5"
 serde = "1.0"
 thiserror = "2"
 gtk = "0.18"
 base64 = "0.21"
 
 [build-dependencies]
-tauri-plugin = { version = "2", features = ["build"] }
+tauri-plugin = { version = "2.3", features = ["build"] }
