@@ -1,6 +1,6 @@
 [package]
 name = "tauri-plugin-vicons"
-version = "2.0.0"
+version = "2.0.1"
 authors = ["Joaquin (Pato) Decima <jdecima@vasak.net.ar>", "Vasak Group"]
 description = "Icon API for Tauri plugins (Created for VasakOS)"
 edition = "2021"
@@ -12,11 +12,11 @@ license-file = "LICENSE"
 readme = "README.md"
 
 [dependencies]
-tauri = "2.5"
+tauri = "2"
 serde = "1.0"
 thiserror = "2"
 gtk = "0.18"
 base64 = "0.21"
 
 [build-dependencies]
-tauri-plugin = { version = "2.3", features = ["build"] }
+tauri-plugin = { version = "2", features = ["build"] }
