@@ -16,7 +16,7 @@ tauri = "2"
 serde = "1.0"
 thiserror = "2"
 gtk = "0.18"
-base64 = "0.21"
+base64 = "0.22"
 
 [build-dependencies]
 tauri-plugin = { version = "2", features = ["build"] }
