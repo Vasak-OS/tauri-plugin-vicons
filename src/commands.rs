@@ -13,6 +13,7 @@ pub fn get_icon(name: &str) -> Result<String, String> {
     );
 
     if themed_icon == None {
+        eprintln!("[tauri-plugin-vicons] Icon not found: '{}'", name);
         themed_icon = themed.lookup_icon(
             "image-missing",
             64,
@@ -37,6 +38,7 @@ pub fn get_symbol(name: &str) -> Result<String, String> {
     );
 
     if themed_icon == None {
+        eprintln!("[tauri-plugin-vicons] Symbol not found: '{}'", name);
         themed_icon = themed.lookup_icon(
             "image-missing",
             64,
