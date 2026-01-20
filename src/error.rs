@@ -8,8 +8,6 @@ pub enum Error {
     Io(#[from] std::io::Error),
     #[error("Icon not found: {0}")]
     IconNotFound(String),
-    #[error("Failed to read icon file")]
-    IconReadError,
     #[error("Theme monitor initialization failed")]
     ThemeMonitorError,
 }
