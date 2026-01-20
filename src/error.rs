@@ -4,11 +4,12 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error(transparent)]
+    #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
-    #[cfg(mobile)]
-    #[error(transparent)]
-    PluginInvoke(#[from] tauri::plugin::mobile::PluginInvokeError),
+    #[error("Icon not found: {0}")]
+    IconNotFound(String),
+    #[error("Theme monitor initialization failed")]
+    ThemeMonitorError,
 }
 
 impl Serialize for Error {
