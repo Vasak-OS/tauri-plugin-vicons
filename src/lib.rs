@@ -3,10 +3,9 @@ use tauri::{
     Manager, Runtime,
 };
 mod desktop;
-
+mod models;
 mod commands;
 mod error;
-mod models;
 
 pub use error::{Error, Result};
 
