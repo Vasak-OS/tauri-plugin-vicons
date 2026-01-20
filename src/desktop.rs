@@ -20,9 +20,11 @@ static SYMBOL_CACHE: Lazy<Mutex<HashMap<String, CacheEntry>>> = Lazy::new(|| Mut
 // Duración del caché: 30 minutos
 const CACHE_DURATION: Duration = Duration::from_secs(30 * 60);
 
-/// Verifica si una entrada de caché ha expirado
+/// Verifica si una entrada de caché ha expirado.
+/// En caso de error al obtener el tiempo transcurrido (ej: problemas con el reloj del sistema),
+/// la entrada se considera expirada para mayor seguridad.
 fn is_cache_expired(timestamp: SystemTime) -> bool {
-    timestamp.elapsed().unwrap_or(CACHE_DURATION) > CACHE_DURATION
+	timestamp.elapsed().map_or(true, |d| d > CACHE_DURATION)
 }
 
 /// Limpia la caché de ambos tipos
