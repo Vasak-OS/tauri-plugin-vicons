@@ -32,23 +32,16 @@ fn clear_cache_internal() {
     eprintln!("[tauri-plugin-vicons] Icon cache cleared (auto-detected theme change)");
 }
 
-/// Inicializa el monitor de cambios de tema
+/// Inicializa el monitor de cambios de tema.
 pub fn init_theme_monitor() {
-    std::thread::spawn(|| {
-        if let Some(themed) = gtk::IconTheme::default() {
-            themed.connect_changed(|_theme| {
-                eprintln!("[tauri-plugin-vicons] Icon theme changed detected");
-                clear_cache_internal();
-            });
-            
-            let context = glib::MainContext::default();
-            let main_loop = glib::MainLoop::new(Some(&context), false);
-            
-            main_loop.run();
-        } else {
-            eprintln!("[tauri-plugin-vicons] Failed to initialize theme monitor");
-        }
-    });
+    if let Some(themed) = gtk::IconTheme::default() {
+        themed.connect_changed(|_theme| {
+            eprintln!("[tauri-plugin-vicons] Icon theme change detected");
+            clear_cache_internal();
+        });
+    } else {
+        eprintln!("[tauri-plugin-vicons] Failed to initialize theme monitor");
+    }
 }
 
 /// Obtiene un icono, verificando caché primero
@@ -58,7 +51,6 @@ pub fn get_icon_impl(name: &str) -> Result<String> {
         let mut cache = ICON_CACHE.lock();
         if let Some(entry) = cache.get(name) {
             if !is_cache_expired(entry.timestamp) {
-                eprintln!("[tauri-plugin-vicons] Icon cache hit: '{}'", name);
                 return Ok(entry.data.clone());
             } else {
                 // Remover entrada expirada
@@ -106,7 +98,6 @@ pub fn get_symbol_impl(name: &str) -> Result<String> {
         let mut cache = SYMBOL_CACHE.lock();
         if let Some(entry) = cache.get(name) {
             if !is_cache_expired(entry.timestamp) {
-                eprintln!("[tauri-plugin-vicons] Symbol cache hit: '{}'", name);
                 return Ok(entry.data.clone());
             } else {
                 cache.remove(name);
