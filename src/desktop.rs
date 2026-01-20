@@ -5,7 +5,6 @@ use std::time::{SystemTime, Duration};
 use parking_lot::Mutex;
 use once_cell::sync::Lazy;
 use gtk::prelude::IconThemeExt;
-use gtk::glib;
 use std::fs;
 use base64::engine::general_purpose::STANDARD;
 use base64::Engine;
@@ -46,98 +45,74 @@ pub fn init_theme_monitor() {
     }
 }
 
-/// Obtiene un icono, verificando caché primero
-pub fn get_icon_impl(name: &str) -> Result<String> {
+/// Helper para obtener datos de icono con caché
+/// Maneja: verificación de caché, búsqueda en tema, fallback a image-missing,
+/// lectura de archivo, codificación base64 y almacenamiento en caché
+fn get_cached_icon_data(
+    name: &str,
+    cache: &Mutex<HashMap<String, CacheEntry>>,
+    lookup_flags: gtk::IconLookupFlags,
+    icon_type: &str,
+) -> Result<String> {
     // Verificar caché primero
     {
-        let mut cache = ICON_CACHE.lock();
-        if let Some(entry) = cache.get(name) {
+        let mut cache_guard = cache.lock();
+        if let Some(entry) = cache_guard.get(name) {
             if !is_cache_expired(entry.timestamp) {
                 return Ok(entry.data.clone());
             } else {
-                // Remover entrada expirada
-                cache.remove(name);
+                cache_guard.remove(name);
             }
         }
     }
 
     let themed = gtk::IconTheme::default().ok_or(crate::error::Error::ThemeMonitorError)?;
-    let mut themed_icon = themed.lookup_icon(
-        name,
-        64,
-        gtk::IconLookupFlags::FORCE_SVG | gtk::IconLookupFlags::FORCE_REGULAR,
-    );
+
+    let mut themed_icon = themed.lookup_icon(name, 64, lookup_flags);
 
     if themed_icon.is_none() {
-        eprintln!("[tauri-plugin-vicons] Icon not found: '{}'", name);
-        themed_icon = themed.lookup_icon(
-            "image-missing",
-            64,
-            gtk::IconLookupFlags::FORCE_SVG | gtk::IconLookupFlags::FORCE_REGULAR,
-        );
+        eprintln!("[tauri-plugin-vicons] {} not found: '{}'", icon_type, name);
+        themed_icon = themed.lookup_icon("image-missing", 64, lookup_flags);
     }
 
-    let icon = themed_icon.ok_or(crate::error::Error::IconNotFound(name.to_string()))?
+    let icon = themed_icon
+        .ok_or(crate::error::Error::IconNotFound(name.to_string()))?
         .filename()
         .ok_or(crate::error::Error::IconNotFound(name.to_string()))?;
 
     let icon_data = fs::read(icon)?;
     let encoded = STANDARD.encode(icon_data);
-    
+
     // Guardar en caché
-    ICON_CACHE.lock().insert(name.to_string(), CacheEntry {
-        data: encoded.clone(),
-        timestamp: SystemTime::now(),
-    });
+    cache.lock().insert(
+        name.to_string(),
+        CacheEntry {
+            data: encoded.clone(),
+            timestamp: SystemTime::now(),
+        },
+    );
 
     Ok(encoded)
 }
 
+/// Obtiene un icono, verificando caché primero
+pub fn get_icon_impl(name: &str) -> Result<String> {
+    get_cached_icon_data(
+        name,
+        &ICON_CACHE,
+        gtk::IconLookupFlags::FORCE_SVG | gtk::IconLookupFlags::FORCE_REGULAR,
+        "Icon",
+    )
+}
+
 /// Obtiene un símbolo, verificando caché primero
 pub fn get_symbol_impl(name: &str) -> Result<String> {
-    // Verificar caché primero
-    {
-        let mut cache = SYMBOL_CACHE.lock();
-        if let Some(entry) = cache.get(name) {
-            if !is_cache_expired(entry.timestamp) {
-                return Ok(entry.data.clone());
-            } else {
-                cache.remove(name);
-            }
-        }
-    }
-
-    let themed = gtk::IconTheme::default().ok_or(crate::error::Error::ThemeMonitorError)?;
-
-    let mut themed_icon = themed.lookup_icon(
+    get_cached_icon_data(
         name,
-        64,
+        &SYMBOL_CACHE,
         gtk::IconLookupFlags::FORCE_SYMBOLIC | gtk::IconLookupFlags::FORCE_SVG,
-    );
-
-    if themed_icon.is_none() {
-        eprintln!("[tauri-plugin-vicons] Symbol not found: '{}'", name);
-        themed_icon = themed.lookup_icon(
-            "image-missing",
-            64,
-            gtk::IconLookupFlags::FORCE_SYMBOLIC | gtk::IconLookupFlags::FORCE_SVG,
-        );
-    }
-
-    let icon = themed_icon.ok_or(crate::error::Error::IconNotFound(name.to_string()))?
-        .filename()
-        .ok_or(crate::error::Error::IconNotFound(name.to_string()))?;
-
-    let icon_data = fs::read(icon)?;
-    let encoded = STANDARD.encode(icon_data);
-    
-    // Guardar en caché
-    SYMBOL_CACHE.lock().insert(name.to_string(), CacheEntry {
-        data: encoded.clone(),
-        timestamp: SystemTime::now(),
-    });
-
-    Ok(encoded)
+        "Symbol",
+    )
 }
 
 pub fn init<R: Runtime, C: DeserializeOwned>(
