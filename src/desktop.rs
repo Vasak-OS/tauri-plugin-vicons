@@ -105,7 +105,7 @@ pub fn get_icon_impl(name: &str) -> Result<String> {
 
     get_cached_icon_data(
         name,
-        &ICON_CACHE,
+        &*ICON_CACHE,
         gtk::IconLookupFlags::FORCE_SVG | gtk::IconLookupFlags::FORCE_REGULAR,
         "Icon",
     )
@@ -121,7 +121,7 @@ pub fn get_symbol_impl(name: &str) -> Result<String> {
 
     get_cached_icon_data(
         name,
-        &SYMBOL_CACHE,
+        &*SYMBOL_CACHE,
         gtk::IconLookupFlags::FORCE_SYMBOLIC | gtk::IconLookupFlags::FORCE_SVG,
         "Symbol",
     )
