@@ -95,8 +95,14 @@ fn get_cached_icon_data(
     Ok(encoded)
 }
 
-/// Obtiene un icono, verificando caché primero
 pub fn get_icon_impl(name: &str) -> Result<String> {
+    // Si es un path existente, retornarlo inmediatamente
+    let path = std::path::Path::new(name);
+    if path.exists() && path.is_file() {
+        let icon_data = fs::read(name)?;
+        return Ok(STANDARD.encode(icon_data));
+    }
+
     get_cached_icon_data(
         name,
         &ICON_CACHE,
@@ -105,8 +111,14 @@ pub fn get_icon_impl(name: &str) -> Result<String> {
     )
 }
 
-/// Obtiene un símbolo, verificando caché primero
 pub fn get_symbol_impl(name: &str) -> Result<String> {
+    // Si es un path existente, retornarlo inmediatamente
+    let path = std::path::Path::new(name);
+    if path.exists() && path.is_file() {
+        let icon_data = fs::read(name)?;
+        return Ok(STANDARD.encode(icon_data));
+    }
+
     get_cached_icon_data(
         name,
         &SYMBOL_CACHE,
