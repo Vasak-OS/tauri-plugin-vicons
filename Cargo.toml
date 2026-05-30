@@ -4,7 +4,7 @@ version = "2.1.1"
 authors = ["Joaquin (Pato) Decima <jdecima@vasak.net.ar>", "Vasak Group"]
 description = "Icon API for Tauri plugins (Created for VasakOS)"
 edition = "2021"
-rust-version = "1.77.2"
+rust-version = "1.80.0"
 exclude = ["/examples", "/dist-js", "/guest-js", "/node_modules"]
 links = "tauri-plugin-vicons"
 repository = "https://github.com/Vasak-OS/tauri-plugin-vicons/"
@@ -17,8 +17,6 @@ serde = "1.0"
 thiserror = "2"
 gtk = "0.18"
 base64 = "0.22"
-parking_lot = "0.12"
-once_cell = "1.19"
 glib = "0.18"
 
 [build-dependencies]

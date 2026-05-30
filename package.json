@@ -22,12 +22,12 @@
     "pretest": "bun run build"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.5.0"
+    "@tauri-apps/api": "^2.11.0"
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.6",
-    "rollup": "^4.44.0",
-    "typescript": "^5.8.3",
+    "rollup": "^4.60.4",
+    "typescript": "^5.9.3",
     "tslib": "^2.8.1"
   },
   "repository": {
