@@ -8,7 +8,7 @@ use std::time::{Duration, SystemTime};
 use base64::engine::general_purpose::STANDARD;
 use base64::Engine;
 use gtk::prelude::IconThemeExt;
-use tauri::{Manager, plugin::PluginApi, AppHandle, Runtime};
+use tauri::{Emitter, Manager, plugin::PluginApi, AppHandle, Runtime};
 
 use crate::error::Result;
 use crate::models::CacheEntry;
@@ -30,11 +30,13 @@ fn clear_cache_internal() {
     crate::logger::info("Icon cache cleared (auto-detected theme change)");
 }
 
-pub fn init_theme_monitor() {
+pub fn init_theme_monitor<R: Runtime>(app: &AppHandle<R>) {
     if let Some(themed) = gtk::IconTheme::default() {
-        themed.connect_changed(|_theme| {
+        let app_clone = app.clone();
+        themed.connect_changed(move |_theme| {
             crate::logger::info("Icon theme change detected");
             clear_cache_internal();
+            let _ = app_clone.emit("vicons:theme-changed", ());
         });
     } else {
         crate::logger::error("Failed to initialize theme monitor");
@@ -137,7 +139,7 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
     let log_path = log_dir.join("logs").join("icons.log");
     crate::logger::init(&log_path);
 
-    init_theme_monitor();
+    init_theme_monitor(app);
 
     Ok(Vicons(app.clone()))
 }
