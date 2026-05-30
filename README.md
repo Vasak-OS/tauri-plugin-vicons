@@ -153,7 +153,31 @@ listen("vicons:theme-changed", async () => {
 
 ## Arquitectura
 
-[![](https://mermaid.ink/img/pako:eNqNkktu2zAQhq8y4CaL2pZqxy-hSBHnobwcGIjRApUNgZImEhGJFChKiWt72wP0Bj1Az1CguUlPUopK4CToolxxRv_M_3FGaxKKCIlDblNxHyZUKphPFhz0KcogljRP4FQKrpBHTbo-h16M6jwU_EaUMkSwQMc3qywQaZNZQrt9AJNn2XyV44dAWgcZjVkIwUphAbNr17qYnbiWe35qfcZgZk2mM-vmk7vcGR15KSu0N-xVTPcpHJVghm0NymOM9p6Uhu0N9ISGd6-Yj2sYv-7isyxPG2a_MNAm0zCfrH__kqWiUD3-SFlEP253LU5qxaZ4_LmBUy9FlEBlmLBKLN9quNiA6wVlEVKp8cCdX4IZRI3_Qu0azzPtGdIwQUiYeml49mwI76BiMeo1bODci7ASaaXtTdHyrZ4LEIAPOZM00hwXXu2eCnFX5vDn23cIaIGDfXONSyoj-rrRv6ZpuKeCMyXkzu7SYzrjm534WfO1meKVpx_LMVT-06rMBAoWc5q-4L0y4qkXpkilbyB8ph8pX8umRnbtYcbUf_8Jh6bouAmuod3Rk5nTUjLASg9yA0ekRWLJIuIoWWKLZCgzWodkXRctiHFYEEdfI7ylZaoWZMG3uiyn_IsQ2XOlFGWcEOeWpoWOyjyiCo8Z1aPbSTQZyiNRckWcrm1aEGdNHnTUG3QG4_77fq87Gg979qhFVsTZH3XsQbfftce9bn846nW3LfLVeNqd0XB_rM9QF9lj2x5u_wKHiDMz?type=png)](https://mermaid.live/edit#pako:eNqNkktu2zAQhq8y4CaL2pZqxy-hSBHnobwcGIjRApUNgZImEhGJFChKiWt72wP0Bj1Az1CguUlPUopK4CToolxxRv_M_3FGaxKKCIlDblNxHyZUKphPFhz0KcogljRP4FQKrpBHTbo-h16M6jwU_EaUMkSwQMc3qywQaZNZQrt9AJNn2XyV44dAWgcZjVkIwUphAbNr17qYnbiWe35qfcZgZk2mM-vmk7vcGR15KSu0N-xVTPcpHJVghm0NymOM9p6Uhu0N9ISGd6-Yj2sYv-7isyxPG2a_MNAm0zCfrH__kqWiUD3-SFlEP253LU5qxaZ4_LmBUy9FlEBlmLBKLN9quNiA6wVlEVKp8cCdX4IZRI3_Qu0azzPtGdIwQUiYeml49mwI76BiMeo1bODci7ASaaXtTdHyrZ4LEIAPOZM00hwXXu2eCnFX5vDn23cIaIGDfXONSyoj-rrRv6ZpuKeCMyXkzu7SYzrjm534WfO1meKVpx_LMVT-06rMBAoWc5q-4L0y4qkXpkilbyB8ph8pX8umRnbtYcbUf_8Jh6bouAmuod3Rk5nTUjLASg9yA0ekRWLJIuIoWWKLZCgzWodkXRctiHFYEEdfI7ylZaoWZMG3uiyn_IsQ2XOlFGWcEOeWpoWOyjyiCo8Z1aPbSTQZyiNRckWcrm1aEGdNHnTUG3QG4_77fq87Gg979qhFVsTZH3XsQbfftce9bn846nW3LfLVeNqd0XB_rM9QF9lj2x5u_wKHiDMz)
+```mermaid
+flowchart TB
+    subgraph Frontend
+        A[getIconSource / getSymbolSource] --> B[getIconType<br/>magic bytes PNG/JPEG/GIF/WebP/BMP/SVG]
+        C[listen 'vicons:theme-changed']
+    end
+
+    subgraph Backend
+        D[get_icon_impl / get_symbol_impl] --> E{¿ruta válida?}
+        E -->|sí| F[leer archivo]
+        E -->|no| G[buscar en GTK IconTheme]
+        G --> H{¿cache hit?}
+        H -->|sí + vigente| I[devolver cache]
+        H -->|no o expirado| J[GTK lookup → base64 → guardar cache]
+    end
+
+    subgraph ThemeMonitor
+        K[init_theme_monitor] --> L[connect_changed GTK signal]
+        L --> M[clear_cache_internal]
+        M --> N[emit 'vicons:theme-changed']
+    end
+
+    A --> D
+    N -.->|Tauri event| C
+```
 
 ### Cache
 
