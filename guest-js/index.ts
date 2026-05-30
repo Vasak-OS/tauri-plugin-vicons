@@ -20,39 +20,39 @@ async function getSymbol(name: string): Promise<string> {
   return "";
 }
 
-// Get icon type from base64
-// This function checks the first bytes of the base64 string to determine if it's a PNG or SVG
-// It returns 'image/png' for PNG and 'image/svg+xml' for SVG
 function getIconType(base64String: string): string {
   try {
-    // Decode the first bytes of the base64
-    const binaryString = atob(base64String.substring(0, 32));
+    const binaryString = atob(base64String.substring(0, 44));
     const bytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
-    // Verify if it's PNG (signature bytes)
-    if (
-      bytes[0] === 0x89 &&
-      bytes[1] === 0x50 &&
-      bytes[2] === 0x4e &&
-      bytes[3] === 0x47
-    ) {
-      return "image/png";
-    }
 
-    // Default, assume SVG
-    // Check for SVG signature bytes
+    if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47)
+      return "image/png";
+
+    if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff)
+      return "image/jpeg";
+
+    if (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x38)
+      return "image/gif";
+
+    if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46)
+      return "image/webp";
+
+    if (bytes[0] === 0x42 && bytes[1] === 0x4d)
+      return "image/bmp";
+
     return "image/svg+xml";
-  } catch (error) {
-    console.error("Error identificando tipo de imagen:", error);
-    return "image/png";
+  } catch {
+    return "image/svg+xml";
   }
 }
 
 export async function getIconSource(value: string): Promise<string> {
   try {
     const icon = await getIcon(value);
+    if (!icon) return "";
     return `data:${getIconType(icon)};base64,${icon}`;
   } catch (error) {
     console.error("[Icon Error] Error obteniendo icono:", error);
@@ -63,6 +63,7 @@ export async function getIconSource(value: string): Promise<string> {
 export async function getSymbolSource(value: string): Promise<string> {
   try {
     const symbol = await getSymbol(value);
+    if (!symbol) return "";
     return `data:${getIconType(symbol)};base64,${symbol}`;
   } catch (error) {
     console.error("[Icon Error] Error obteniendo simbolo:", error);
