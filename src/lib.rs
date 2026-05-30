@@ -6,6 +6,7 @@ mod desktop;
 mod models;
 mod commands;
 mod error;
+mod logger;
 
 pub use error::{Error, Result};
 
