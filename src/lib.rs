@@ -2,11 +2,13 @@ use tauri::{
     plugin::{Builder, TauriPlugin},
     Manager, Runtime,
 };
+mod cache;
 mod desktop;
 mod models;
 mod commands;
 mod error;
 mod logger;
+mod paths;
 
 pub use error::{Error, Result};
 
