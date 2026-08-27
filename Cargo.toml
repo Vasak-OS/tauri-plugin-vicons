@@ -1,6 +1,6 @@
 [package]
 name = "tauri-plugin-vicons"
-version = "2.1.2"
+version = "2.1.3"
 authors = ["Joaquin (Pato) Decima <jdecima@vasak.net.ar>", "Vasak Group"]
 description = "Icon API for Tauri plugins (Created for VasakOS)"
 edition = "2021"
