@@ -1,6 +1,6 @@
 use serde::de::DeserializeOwned;
-use std::collections::HashMap;
 use std::collections::hash_map::Entry;
+use std::collections::HashMap;
 use std::fs;
 use std::sync::{LazyLock, Mutex};
 use std::time::SystemTime;
@@ -8,7 +8,7 @@ use std::time::SystemTime;
 use base64::engine::general_purpose::STANDARD;
 use base64::Engine;
 use gtk::prelude::IconThemeExt;
-use tauri::{Emitter, Manager, plugin::PluginApi, AppHandle, Runtime};
+use tauri::{plugin::PluginApi, AppHandle, Emitter, Manager, Runtime};
 
 use crate::cache::{self, bloquear};
 use crate::error::Result;
@@ -90,8 +90,7 @@ fn get_cached_icon_data(
         }
     }
 
-    let themed =
-        gtk::IconTheme::default().ok_or(crate::error::Error::ThemeMonitorError)?;
+    let themed = gtk::IconTheme::default().ok_or(crate::error::Error::ThemeMonitorError)?;
 
     let mut themed_icon = themed.lookup_icon(name, TAMANO_DE_BUSQUEDA, lookup_flags);
 
@@ -210,7 +209,6 @@ pub struct Vicons<R: Runtime>(AppHandle<R>);
 
 impl<R: Runtime> Vicons<R> {}
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -266,7 +264,10 @@ mod tests {
             "/usr/share/icons/VasakOS/devices/16/cpu.svg",
             "/usr/share/pixmaps/archlinux-logo.png",
         ];
-        let Some(existente) = candidatos.iter().find(|r| std::path::Path::new(r).is_file()) else {
+        let Some(existente) = candidatos
+            .iter()
+            .find(|r| std::path::Path::new(r).is_file())
+        else {
             return;
         };
 
@@ -280,7 +281,12 @@ mod tests {
         // WebView y aceptaba cualquier ruta existente, así que
         // `getIconSource('/etc/passwd')` devolvía el archivo en base64 dentro de un
         // `data:` URL. Comprobado sobre esta máquina antes de arreglarlo.
-        for archivo in ["/etc/passwd", "/etc/hostname", "/etc/fstab", "/proc/self/environ"] {
+        for archivo in [
+            "/etc/passwd",
+            "/etc/hostname",
+            "/etc/fstab",
+            "/proc/self/environ",
+        ] {
             if !std::path::Path::new(archivo).exists() {
                 continue;
             }
@@ -323,7 +329,10 @@ mod tests {
             "/usr/share/icons/VasakOS/devices/16/cpu.svg",
             "/usr/share/pixmaps/archlinux-logo.png",
         ];
-        let Some(existente) = candidatos.iter().find(|r| std::path::Path::new(r).is_file()) else {
+        let Some(existente) = candidatos
+            .iter()
+            .find(|r| std::path::Path::new(r).is_file())
+        else {
             // En una máquina sin esos temas no hay nada que comprobar.
             return;
         };

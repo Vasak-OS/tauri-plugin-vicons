@@ -3,11 +3,11 @@ use tauri::{
     Manager, Runtime,
 };
 mod cache;
-mod desktop;
-mod models;
 mod commands;
+mod desktop;
 mod error;
 mod logger;
+mod models;
 mod paths;
 
 pub use error::{Error, Result};
