@@ -54,8 +54,12 @@ En `src-tauri/capabilities/default.json`:
 |-------------|------------------------------------------------|--------------------------|
 | `get_icon`  | Obtiene un icono regular por nombre o ruta     | `String` (base64)        |
 | `get_symbol`| Obtiene un icono simbólico por nombre o ruta   | `String` (base64)        |
+| `has_icon`  | Si el tema tiene el icono regular, sin traerlo | `bool`                   |
+| `has_symbol`| Si el tema tiene el icono simbólico            | `bool`                   |
 
-Ambos aceptan un solo argumento `name: &str`. Si es una **ruta de archivo válida**, leen el archivo directamente. Si es un **nombre de icono GTK**, lo buscan en el tema de iconos del sistema.
+Los cuatro aceptan un solo argumento `name: &str`. Si es una **ruta de archivo válida**, leen el archivo directamente. Si es un **nombre de icono GTK**, lo buscan en el tema de iconos del sistema.
+
+`has_icon` y `has_symbol` hacen **la misma búsqueda** que su `get_` —mismo tamaño, mismas banderas—, así que un `true` garantiza que el `get_` correspondiente devuelve ese icono.
 
 ### Eventos emitidos
 
@@ -81,8 +85,35 @@ await listen("vicons:theme-changed", () => {
 | `getSymbolSource` | Igual que `getIconSource` pero con iconos simbólicos            | `string`               |
 | `getIcon`         | Obtiene solo el base64 de un icono regular (sin data URI)       | `Promise<string>`      |
 | `getSymbol`       | Obtiene solo el base64 de un icono simbólico (sin data URI)     | `Promise<string>`      |
+| `hasIcon`         | Si el tema tiene el icono, para elegir antes de dibujar          | `Promise<boolean>`     |
+| `hasSymbol`       | Igual que `hasIcon` pero con iconos simbólicos                   | `Promise<boolean>`     |
 
 `getIconSource` y `getSymbolSource` detectan automáticamente el **tipo MIME** del icono (PNG, JPEG, GIF, WebP, BMP, SVG) mediante magic bytes.
+
+### Por qué hacen falta `hasIcon` y `hasSymbol`
+
+`getIconSource` y `getSymbolSource` **no fallan** cuando el icono no está: el tema
+devuelve `image-missing` —el cuadrito de imagen rota— como si fuera el icono pedido, y lo
+que llega es un data URI perfectamente válido. Comprobar el resultado no alcanza, porque
+nunca está vacío:
+
+```typescript
+import { getSymbolSource, hasSymbol } from '@vasakgroup/plugin-vicons';
+
+// Mal: `icono` nunca es "", así que el `if` no protege de nada.
+const icono = await getSymbolSource('google-symbolic');
+if (icono) mostrar(icono); // dibuja el cuadrito si el tema no lo tiene
+
+// Bien: se pregunta primero y se elige otro nombre si falta.
+const nombre = (await hasSymbol('google-symbolic'))
+  ? 'google-symbolic'
+  : 'goa-account-symbolic';
+mostrar(await getSymbolSource(nombre));
+```
+
+Ante un error del plugin contestan `false`, no una excepción: quien pregunta esto lo hace
+para elegir un icono alternativo, y caer al alternativo es lo razonable. El error queda en
+la consola.
 
 ## Uso
 
@@ -157,6 +188,7 @@ listen("vicons:theme-changed", async () => {
 flowchart TB
     subgraph Frontend
         A[getIconSource / getSymbolSource] --> B[getIconType<br/>magic bytes PNG/JPEG/GIF/WebP/BMP/SVG]
+        O[hasIcon / hasSymbol]
         C[listen 'vicons:theme-changed']
     end
 
@@ -167,6 +199,12 @@ flowchart TB
         G --> H{¿cache hit?}
         H -->|sí + vigente| I[devolver cache]
         H -->|no o expirado| J[GTK lookup → base64 → guardar cache]
+        J -.->|sin resultado| J2[image-missing<br/>el cuadrito, indistinguible del icono real]
+
+        P[has_icon_impl / has_symbol_impl] --> E2{¿ruta válida?}
+        E2 -->|sí| P1[true]
+        E2 -->|no| P2[mismo GTK lookup, sin traer el archivo]
+        P2 --> P3{¿hubo resultado?}
     end
 
     subgraph ThemeMonitor
@@ -176,6 +214,7 @@ flowchart TB
     end
 
     A --> D
+    O[hasIcon / hasSymbol] --> P
     N -.->|Tauri event| C
 ```
 

@@ -3,11 +3,11 @@ use tauri::{
     Manager, Runtime,
 };
 mod cache;
-mod desktop;
-mod models;
 mod commands;
+mod desktop;
 mod error;
 mod logger;
+mod models;
 mod paths;
 
 pub use error::{Error, Result};
@@ -29,7 +29,9 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("vicons")
         .invoke_handler(tauri::generate_handler![
             commands::get_icon,
-            commands::get_symbol
+            commands::get_symbol,
+            commands::has_icon,
+            commands::has_symbol
         ])
         .setup(|app, api| {
             let vicons = desktop::init(app, api)?;
