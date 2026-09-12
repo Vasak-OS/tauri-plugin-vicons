@@ -6,6 +6,8 @@ Default permissions for the plugin
 
 - `allow-get-icon`
 - `allow-get-symbol`
+- `allow-has-icon`
+- `allow-has-symbol`
 
 ## Permission Table
 
@@ -64,6 +66,58 @@ Enables the get_symbol command without any pre-configured scope.
 <td>
 
 Denies the get_symbol command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`vicons:allow-has-icon`
+
+</td>
+<td>
+
+Enables the has_icon command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`vicons:deny-has-icon`
+
+</td>
+<td>
+
+Denies the has_icon command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`vicons:allow-has-symbol`
+
+</td>
+<td>
+
+Enables the has_symbol command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`vicons:deny-has-symbol`
+
+</td>
+<td>
+
+Denies the has_symbol command without any pre-configured scope.
 
 </td>
 </tr>

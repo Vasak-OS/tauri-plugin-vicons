@@ -20,6 +20,39 @@ async function getSymbol(name: string): Promise<string> {
   return "";
 }
 
+/**
+ * Si el tema puede dibujar este nombre.
+ *
+ * Hace falta porque `getIcon` y `getSymbol` no fallan cuando el icono no está:
+ * el tema devuelve `image-missing` —el cuadrito de imagen rota— como si fuera el
+ * icono pedido, y lo que llega acá es un base64 válido, indistinguible del de
+ * verdad. Sin esto, la única forma de detectarlo era pedir `image-missing` a
+ * propósito y comparar.
+ *
+ * Ante un error del plugin contesta `false`, igual que el resto del módulo
+ * contesta `""`: quien pregunta esto lo hace para elegir un icono alternativo, y
+ * caer al alternativo es lo mismo que hacía hasta ahora. El error queda en la
+ * consola.
+ */
+async function has(command: "has_icon" | "has_symbol", name: string): Promise<boolean> {
+  try {
+    return await invoke(`plugin:vicons|${command}`, { name });
+  } catch (error) {
+    console.error("[Icon Error] Error preguntando por el icono:", error);
+  }
+  return false;
+}
+
+/** Si `getIconSource` va a devolver este icono y no el cuadrito. */
+export async function hasIcon(name: string): Promise<boolean> {
+  return has("has_icon", name);
+}
+
+/** Si `getSymbolSource` va a devolver este símbolo y no el cuadrito. */
+export async function hasSymbol(name: string): Promise<boolean> {
+  return has("has_symbol", name);
+}
+
 function getIconType(base64String: string): string {
   try {
     const binaryString = atob(base64String.substring(0, 44));

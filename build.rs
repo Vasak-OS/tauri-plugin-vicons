@@ -1,4 +1,4 @@
-const COMMANDS: &[&str] = &["get_icon", "get_symbol"];
+const COMMANDS: &[&str] = &["get_icon", "get_symbol", "has_icon", "has_symbol"];
 
 fn main() {
   tauri_plugin::Builder::new(COMMANDS)

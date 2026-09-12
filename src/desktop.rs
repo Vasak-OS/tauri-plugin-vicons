@@ -43,6 +43,33 @@ pub fn init_theme_monitor<R: Runtime>(app: &AppHandle<R>) {
     }
 }
 
+/// A qué tamaño se le pide el icono a GTK.
+///
+/// No es el tamaño al que se dibuja —eso lo decide quien pone el `<img>`—: es el
+/// tamaño con el que se elige *qué archivo* del tema se usa. Importa que sea el
+/// mismo en la búsqueda y en la pregunta: un tema puede tener el icono en un
+/// tamaño y no en otro, y entonces `has_symbol` diría que sí de algo que
+/// `get_symbol` no trae.
+const TAMANO_DE_BUSQUEDA: i32 = 64;
+
+/// Con qué banderas se busca un icono regular.
+///
+/// Aparte, y no escritas en cada sitio donde se buscan, porque la pregunta
+/// «¿está?» y la búsqueda «traelo» tienen que hacer **exactamente** la misma
+/// búsqueda. Si se separan, una contesta por un archivo que la otra no usa.
+fn banderas_de_icono() -> gtk::IconLookupFlags {
+    gtk::IconLookupFlags::FORCE_SVG | gtk::IconLookupFlags::FORCE_REGULAR
+}
+
+/// Con qué banderas se busca un icono simbólico.
+///
+/// `FORCE_SYMBOLIC` hace que GTK pruebe «<nombre>-symbolic» a lo largo de toda la
+/// cadena de herencia antes que el nombre pelado, que es lo que hace que el
+/// escritorio dibuje siempre la versión de línea.
+fn banderas_de_simbolo() -> gtk::IconLookupFlags {
+    gtk::IconLookupFlags::FORCE_SYMBOLIC | gtk::IconLookupFlags::FORCE_SVG
+}
+
 fn get_cached_icon_data(
     name: &str,
     cache: &Mutex<HashMap<String, CacheEntry>>,
@@ -66,11 +93,11 @@ fn get_cached_icon_data(
     let themed =
         gtk::IconTheme::default().ok_or(crate::error::Error::ThemeMonitorError)?;
 
-    let mut themed_icon = themed.lookup_icon(name, 64, lookup_flags);
+    let mut themed_icon = themed.lookup_icon(name, TAMANO_DE_BUSQUEDA, lookup_flags);
 
     if themed_icon.is_none() {
         crate::logger::warn(&format!("{} not found: '{}'", icon_type, name));
-        themed_icon = themed.lookup_icon("image-missing", 64, lookup_flags);
+        themed_icon = themed.lookup_icon("image-missing", TAMANO_DE_BUSQUEDA, lookup_flags);
     }
 
     let icon = themed_icon
@@ -109,12 +136,7 @@ pub fn get_icon_impl(name: &str) -> Result<String> {
         return read_file_as_base64(ruta);
     }
 
-    get_cached_icon_data(
-        name,
-        &ICON_CACHE,
-        gtk::IconLookupFlags::FORCE_SVG | gtk::IconLookupFlags::FORCE_REGULAR,
-        "Icon",
-    )
+    get_cached_icon_data(name, &ICON_CACHE, banderas_de_icono(), "Icon")
 }
 
 pub fn get_symbol_impl(name: &str) -> Result<String> {
@@ -123,12 +145,49 @@ pub fn get_symbol_impl(name: &str) -> Result<String> {
         return read_file_as_base64(ruta);
     }
 
-    get_cached_icon_data(
-        name,
-        &SYMBOL_CACHE,
-        gtk::IconLookupFlags::FORCE_SYMBOLIC | gtk::IconLookupFlags::FORCE_SVG,
-        "Symbol",
-    )
+    get_cached_icon_data(name, &SYMBOL_CACHE, banderas_de_simbolo(), "Symbol")
+}
+
+/// Si el tema tiene con qué dibujar este nombre, sin traer el archivo.
+///
+/// Existe porque `get_icon_impl` y `get_symbol_impl` **nunca** fallan por un
+/// nombre que no está: cuando GTK no lo encuentra, devuelven `image-missing` —el
+/// cuadrito de imagen rota— como si fuera el icono pedido. Quien llama recibe un
+/// base64 perfectamente válido y no tiene forma de distinguirlo del icono de
+/// verdad, así que lo dibuja.
+///
+/// Eso se vio en «Cuentas en Línea» de `vasak-settings`: Google, Microsoft y
+/// Nextcloud salían los tres con el cuadrito, y la vista no podía ni saberlo
+/// —su `v-if` sobre el resultado nunca era falso— ni elegir otra cosa.
+///
+/// La búsqueda es la misma que haría `get_*`: mismo tamaño, mismas banderas. Si
+/// no lo fuera, esto contestaría por un archivo que la otra no usa, que es peor
+/// que no preguntar.
+fn has_impl(name: &str, lookup_flags: gtk::IconLookupFlags) -> Result<bool> {
+    // Una ruta cuenta como que está si el cerco la acepta y el archivo existe:
+    // es de donde `get_*` lo leería. Ver `paths`.
+    if paths::readable_icon_path(name, &paths::allowed_roots()).is_some() {
+        return Ok(true);
+    }
+
+    let themed = gtk::IconTheme::default().ok_or(crate::error::Error::ThemeMonitorError)?;
+
+    // Sin `GENERIC_FALLBACK` ni `USE_BUILTIN`, `lookup_icon` contesta `None`
+    // cuando no hay nada: es el único punto del plugin donde el faltante se
+    // puede ver antes de que lo tape `image-missing`.
+    Ok(themed
+        .lookup_icon(name, TAMANO_DE_BUSQUEDA, lookup_flags)
+        .is_some())
+}
+
+/// Si `get_icon_impl` va a devolver este icono y no el cuadrito.
+pub fn has_icon_impl(name: &str) -> Result<bool> {
+    has_impl(name, banderas_de_icono())
+}
+
+/// Si `get_symbol_impl` va a devolver este símbolo y no el cuadrito.
+pub fn has_symbol_impl(name: &str) -> Result<bool> {
+    has_impl(name, banderas_de_simbolo())
 }
 
 pub fn init<R: Runtime, C: DeserializeOwned>(
@@ -172,6 +231,48 @@ mod tests {
     // inicializa Tauri, en una prueba no—. Así que el cerco se comprueba donde
     // vive, y que `get_icon_impl` lo consulte se comprueba con el caso legítimo,
     // que devuelve antes de tocar GTK.
+
+    #[test]
+    fn preguntar_y_traer_hacen_la_misma_busqueda() {
+        // Lo único que hace útil a `has_symbol` es que conteste por el mismo
+        // archivo que `get_symbol` va a traer. Si alguna de las dos cambia de
+        // banderas por su cuenta, la respuesta pasa a ser sobre otro icono: diría
+        // que sí de algo que después sale como el cuadrito, que es exactamente el
+        // problema que vino a resolver.
+        //
+        // Acá se comprueba la intención de cada juego —que el simbólico fuerce la
+        // versión de línea y el regular no—; que `get_*` y `has_*` usen éstas y no
+        // otras lo garantiza que no queden banderas escritas en ningún otro sitio.
+        let simbolo = banderas_de_simbolo();
+        assert!(simbolo.contains(gtk::IconLookupFlags::FORCE_SYMBOLIC));
+        assert!(simbolo.contains(gtk::IconLookupFlags::FORCE_SVG));
+        assert!(!simbolo.contains(gtk::IconLookupFlags::FORCE_REGULAR));
+
+        let icono = banderas_de_icono();
+        assert!(icono.contains(gtk::IconLookupFlags::FORCE_REGULAR));
+        assert!(icono.contains(gtk::IconLookupFlags::FORCE_SVG));
+        assert!(!icono.contains(gtk::IconLookupFlags::FORCE_SYMBOLIC));
+    }
+
+    #[test]
+    fn un_icono_que_esta_en_el_disco_se_responde_sin_preguntarle_a_gtk() {
+        // Un `.desktop` puede traer `Icon=` con una ruta absoluta, y de ahí es de
+        // donde `get_*` lo leería: la pregunta tiene que contestar por lo mismo.
+        //
+        // Sirve además para probar `has_*` sin GTK inicializado, que en una prueba
+        // no lo está: este camino devuelve antes de tocarlo.
+        let candidatos = [
+            "/usr/share/icons/VasakOS/apps/scalable/folder.svg",
+            "/usr/share/icons/VasakOS/devices/16/cpu.svg",
+            "/usr/share/pixmaps/archlinux-logo.png",
+        ];
+        let Some(existente) = candidatos.iter().find(|r| std::path::Path::new(r).is_file()) else {
+            return;
+        };
+
+        assert!(has_icon_impl(existente).unwrap());
+        assert!(has_symbol_impl(existente).unwrap());
+    }
 
     #[test]
     fn un_nombre_de_icono_no_puede_ser_cualquier_archivo() {
