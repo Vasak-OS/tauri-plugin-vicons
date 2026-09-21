@@ -62,28 +62,54 @@ fn subdirectorios_de_iconos(base: &Path, destino: &mut Vec<PathBuf>) {
 /// una instalación con `XDG_DATA_DIRS` propio —un Flatpak, un prefijo en `/opt`—
 /// tiene sus iconos en otra parte, y una lista fija los dejaría sin icono.
 pub fn allowed_roots() -> Vec<PathBuf> {
+    raices_de(
+        std::env::var("XDG_DATA_DIRS").ok().as_deref(),
+        dirs::data_dir(),
+        dirs::home_dir(),
+    )
+}
+
+/// Las raíces, sin leer el entorno.
+///
+/// Aparte por dos motivos. Uno, que el entorno es global al proceso y las
+/// pruebas corren en paralelo: una que escriba una variable decide al azar el
+/// resultado de otra. Y dos, que esto es un **cerco de seguridad** y lo que hay
+/// que poder probar son sus bordes, no lo que tenga puesto la máquina.
+///
+/// # Toda raíz tiene que ser absoluta
+///
+/// El estándar pide ignorar una ruta relativa en estas variables, y acá importa
+/// más que en otros lados: `is_inside` canonicaliza las raíces, y
+/// `Path::canonicalize` resuelve una ruta relativa **contra el directorio de
+/// trabajo del proceso**. Una entrada como `.` en `XDG_DATA_DIRS` se volvería
+/// así el directorio desde el que se lanzó la aplicación, y con el proceso
+/// arrancado en `/` eso convierte el disco entero en raíz de iconos — justo lo
+/// que este cerco existe para impedir.
+///
+/// No hace falta tratar la entrada vacía aparte: la cadena vacía tampoco es
+/// absoluta, así que sale de la misma comprobación.
+fn raices_de(
+    dirs_del_sistema: Option<&str>,
+    datos: Option<PathBuf>,
+    hogar: Option<PathBuf>,
+) -> Vec<PathBuf> {
     let mut raices = Vec::new();
 
     // Los árboles de datos del sistema, que son públicos por definición.
-    let dirs = std::env::var("XDG_DATA_DIRS")
-        .ok()
+    let dirs = dirs_del_sistema
         .filter(|v| !v.trim().is_empty())
-        .unwrap_or_else(|| "/usr/local/share:/usr/share".to_string());
-    for parte in dirs.split(':').filter(|p| !p.is_empty()) {
-        raices.push(PathBuf::from(parte));
+        .unwrap_or("/usr/local/share:/usr/share");
+    for parte in dirs.split(':').map(Path::new).filter(|p| p.is_absolute()) {
+        raices.push(parte.to_path_buf());
     }
 
     // Los del usuario: sólo los de iconos, no el `$HOME` entero ni todo
     // `~/.local/share`, que es donde viven credenciales de otras aplicaciones.
-    if let Some(datos) = std::env::var_os("XDG_DATA_HOME")
-        .map(PathBuf::from)
-        .filter(|p| !p.as_os_str().is_empty())
-        .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".local/share")))
-    {
+    if let Some(datos) = datos.filter(|p| p.is_absolute()) {
         subdirectorios_de_iconos(&datos, &mut raices);
     }
-    if let Some(hogar) = std::env::var_os("HOME") {
-        raices.push(PathBuf::from(&hogar).join(".icons"));
+    if let Some(hogar) = hogar.filter(|p| p.is_absolute()) {
+        raices.push(hogar.join(".icons"));
     }
 
     raices
@@ -138,7 +164,8 @@ mod tests {
     /// mismo proceso, así que un directorio compartido hace que se borren los
     /// archivos entre ellas — y el fallo aparece y desaparece según el orden.
     fn escenario(quien: &str) -> (PathBuf, Vec<PathBuf>) {
-        let base = std::env::temp_dir().join(format!("vicons-prueba-{}-{quien}", std::process::id()));
+        let base =
+            std::env::temp_dir().join(format!("vicons-prueba-{}-{quien}", std::process::id()));
         let _ = fs::remove_dir_all(&base);
         fs::create_dir_all(base.join("permitido")).unwrap();
         fs::create_dir_all(base.join("secretos")).unwrap();
@@ -174,7 +201,10 @@ mod tests {
         assert_eq!(readable_icon_path(secreto.to_str().unwrap(), &raices), None);
         // Y tampoco con extensión de imagen: lo que decide es dónde está.
         let disfrazado = base.join("secretos/robada.png");
-        assert_eq!(readable_icon_path(disfrazado.to_str().unwrap(), &raices), None);
+        assert_eq!(
+            readable_icon_path(disfrazado.to_str().unwrap(), &raices),
+            None
+        );
         let _ = fs::remove_dir_all(&base);
     }
 
@@ -244,7 +274,10 @@ mod tests {
         // Y uno que entra justo sí se lee, para que el límite no sea un rechazo
         // disfrazado.
         let justo = base.join("permitido/justo.png");
-        fs::File::create(&justo).unwrap().set_len(LIMITE_ARCHIVO).unwrap();
+        fs::File::create(&justo)
+            .unwrap()
+            .set_len(LIMITE_ARCHIVO)
+            .unwrap();
         assert!(readable_icon_path(justo.to_str().unwrap(), &raices).is_some());
         let _ = fs::remove_dir_all(&base);
     }
@@ -256,7 +289,10 @@ mod tests {
         assert!(has_icon_extension(Path::new("a/b/icono.SvG")));
         assert!(!has_icon_extension(Path::new("a/b/clave.pem")));
         assert!(!has_icon_extension(Path::new("a/b/sin-extension")));
-        assert!(!has_icon_extension(Path::new("a/b/.png")), "sólo extensión, sin nombre");
+        assert!(
+            !has_icon_extension(Path::new("a/b/.png")),
+            "sólo extensión, sin nombre"
+        );
     }
 
     #[test]
@@ -266,11 +302,17 @@ mod tests {
         let raices = allowed_roots();
         if let Some(hogar) = std::env::var_os("HOME") {
             let hogar = PathBuf::from(hogar);
-            assert!(!raices.contains(&hogar), "el hogar entero no puede ser una raíz");
+            assert!(
+                !raices.contains(&hogar),
+                "el hogar entero no puede ser una raíz"
+            );
             assert!(!raices.contains(&hogar.join(".local/share")));
             assert!(raices.iter().any(|r| r.ends_with(".icons")));
         }
-        assert!(!raices.contains(&PathBuf::from("/")), "la raíz del sistema tampoco");
+        assert!(
+            !raices.contains(&PathBuf::from("/")),
+            "la raíz del sistema tampoco"
+        );
         assert!(!raices.contains(&PathBuf::from("/etc")));
     }
 
@@ -280,9 +322,60 @@ mod tests {
         // escritorio se quedaría sin ningún icono del sistema.
         let raices = allowed_roots();
         assert!(
-            raices.contains(&PathBuf::from("/usr/share"))
-                || std::env::var("XDG_DATA_DIRS").is_ok(),
+            raices.contains(&PathBuf::from("/usr/share")) || std::env::var("XDG_DATA_DIRS").is_ok(),
             "{raices:?}"
+        );
+    }
+
+    #[test]
+    fn una_raiz_relativa_del_sistema_no_entra() {
+        // `is_inside` canonicaliza las raíces, y canonicalizar una ruta
+        // relativa la resuelve contra el directorio de trabajo del proceso. Un
+        // `.` acá sería «desde donde se lanzó la aplicación», y con el proceso
+        // arrancado en `/` eso es el disco entero: exactamente lo que este
+        // cerco existe para impedir.
+        let raices = raices_de(Some(".:..:relativo:/usr/share"), None, None);
+        assert_eq!(raices, vec![PathBuf::from("/usr/share")]);
+    }
+
+    #[test]
+    fn unos_datos_relativos_no_agregan_raices() {
+        // La cadena vacía sale de la misma regla: tampoco es absoluta.
+        for relativa in ["", "datos", "./datos", "../datos"] {
+            let raices = raices_de(Some("/usr/share"), Some(PathBuf::from(relativa)), None);
+            assert_eq!(
+                raices,
+                vec![PathBuf::from("/usr/share")],
+                "«{relativa}» no tiene que agregar nada"
+            );
+        }
+    }
+
+    #[test]
+    fn un_hogar_relativo_no_agrega_sus_iconos() {
+        let raices = raices_de(Some("/usr/share"), None, Some(PathBuf::from("casa")));
+        assert_eq!(raices, vec![PathBuf::from("/usr/share")]);
+    }
+
+    #[test]
+    fn con_todo_absoluto_entran_los_del_usuario() {
+        // Y al revés: que el filtro no se haya comido lo que sí corresponde.
+        let raices = raices_de(Some("/usr/share"), None, Some(PathBuf::from("/home/pato")));
+        assert!(
+            raices.contains(&PathBuf::from("/home/pato/.icons")),
+            "{raices:?}"
+        );
+    }
+
+    #[test]
+    fn sin_nada_quedan_los_dos_del_estandar() {
+        let raices = raices_de(None, None, None);
+        assert_eq!(
+            raices,
+            vec![
+                PathBuf::from("/usr/local/share"),
+                PathBuf::from("/usr/share")
+            ]
         );
     }
 }
