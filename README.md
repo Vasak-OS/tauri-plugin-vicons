@@ -1,264 +1,417 @@
-# Tauri Plugin vicons
+# Tauri plugin vicons
 
-Obtiene íconos nativos del sistema Linux (GTK) como base64, listos para usar en cualquier elemento `<img>`. Soporta temas de iconos del sistema, cacheo automático, y detección de cambios de tema en vivo.
+Plugin for tauri that allows you to get system icons with the icon name (Only for Linux {VasakOS})
 
-## Requisitos
+---
 
-- Rust **1.80.0+**
-- Tauri **v2**
-- Linux con **GTK 3** (entornos GNOME, KDE, Xfce, etc.)
+## Tecnología
+
+Uso: generate-readme-badges.sh <tipo>
+
+Tipos válidos:
+  tauri-vue       Apps Tauri + Vue 3 (Rust, Tauri, Vue 3, TypeScript)
+  rust-service    Servicios Rust systemd/D-Bus (Rust, systemd, D-Bus)
+  cpp-plugin      Plugins C++ Wayfire (C++, Meson, Wayfire)
+  meson-c         Módulos C WirePlumber (C, Meson, WirePlumber)
+  meson-cpp       Plugins C++ genéricos Meson (C++, Meson)
+
+Ejemplos:
+  ./generate-readme-badges.sh tauri-vue
+  ./generate-readme-badges.sh rust-service > tech-badges.md
+
+## Estado
+
+[![CI](https://github.com/Vasak-OS/tauri-plugin-vicons/actions/workflows/ci.yml/badge.svg)](https://github.com/Vasak-OS/tauri-plugin-vicons/actions/workflows/ci.yml)
+[![Versión](https://img.shields.io/github/v/release/Vasak-OS/tauri-plugin-vicons?style=flat&label=Versi%C3%B3n)](https://github.com/Vasak-OS/tauri-plugin-vicons/releases)
+[![Licencia](https://img.shields.io/github/license/Vasak-OS/tauri-plugin-vicons?style=flat)](LICENSE)
+[![Cobertura](https://sonarcloud.io/api/project_badges/measure?project=Vasak-OS_tauri-plugin-vicons&metric=coverage&style=flat)](https://sonarcloud.io/summary/new_code?id=Vasak-OS_tauri-plugin-vicons)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=Vasak-OS_tauri-plugin-vicons&metric=alert_status&style=flat)](https://sonarcloud.io/summary/new_code?id=Vasak-OS_tauri-plugin-vicons)
+[![Tamaño repo](https://img.shields.io/github/repo-size/Vasak-OS/tauri-plugin-vicons?style=flat)](https://github.com/Vasak-OS/tauri-plugin-vicons)
+
+---
+
+## Descripción
+
+Plugin for tauri that allows you to get system icons with the icon name (Only for Linux {VasakOS})
+
+**Para el usuario:** Plugin for tauri that allows you to get system icons with the icon name (Only for Linux {VasakOS})
+
+**Integración VasakOS:** Integra con el ecosistema VasakOS vía D-Bus y configuración compartida.
+
+---
+
+## Arquitectura (diagramas)
+
+> Copia y pega la plantilla que necesites, descomenta y adapta.
+
+### Flujo de datos
+
+```mermaid
+<!--
+graph TD
+    A[Entrada: Teclado / Ratón / D-Bus / Sistema] --> B[Procesamiento: Core Rust + Tauri Commands]
+    B --> C[Salida: UI actualizada / Acciones del sistema]
+    style A fill:#e1f5fe
+    style C fill:#e8f5e9
+-->
+```
+
+### Componentes internos
+
+```mermaid
+<!--
+flowchart LR
+    subgraph App[Tauri plugin vicons]
+        UI[Frontend Vue 3 + vue-libvasak]
+        Core[Core Rust: lógica principal]
+        IPC[Tauri Commands / Eventos]
+        System[Systemd / D-Bus / PipeWire / Wayland]
+    end
+    UI --> IPC
+    IPC --> Core
+    Core --> DBus[(D-Bus / zbus)]
+    Core --> System
+    style UI fill:#f3e5f5
+    style Core fill:#e3f2fd
+    style DBus fill:#fff3e0
+    style System fill:#fce4ec
+-->
+```
+
+### Integración en el sistema VasakOS
+
+```mermaid
+<!--
+C4Context
+    title Tauri plugin vicons en VasakOS
+    Person(usuario, "Usuario", "Persona que usa el sistema")
+    System_Boundary(c1, "VasakOS") {
+        System(app, "Tauri plugin vicons", "Plugin for tauri that allows you to get system icons with the icon name (Only fo")
+        System_Ext(settings, "vasak-settings", "Configuración central")
+        System_Ext(keyring, "vasak-keyring", "Secrets y claves")
+        System_Ext(accounts, "vasak-accounts", "Cuentas e identidad")
+        System_Ext(permissions, "vasak-permissions", "Permisos y portales")
+    }
+    System_Ext(systemd, "systemd", "Gestión de servicios")
+    System_Ext(dbus, "D-Bus", "Bus de mensajes del sistema")
+    System_Ext(wayland, "Wayland / Wayfire", "Compositor")
+    System_Ext(pipewire, "PipeWire", "Multimedia")
+    Rel(usuario, app, "Usa")
+    Rel(app, settings, "Lee/escribe config")
+    Rel(app, keyring, "Guarda/lee secrets")
+    Rel(app, accounts, "Identidad de cuenta")
+    Rel(app, permissions, "Solicita permisos")
+    Rel(app, systemd, "Activación / sockets")
+    Rel(app, dbus, "Expone / consume interfaces")
+    Rel(app, wayland, "Superficies / protocolos")
+    Rel(app, pipewire, "Streams de audio/video")
+-->
+```
+
+---
 
 ## Instalación
 
-### 1. Agregar el crate Rust
-
-```toml
-[dependencies]
-tauri-plugin-vicons = { git = "https://github.com/Vasak-OS/tauri-plugin-vicons", branch = "v2" }
-```
-
-### 2. Registrar el plugin en `lib.rs`
-
-```rust
-fn main() {
-    tauri::Builder::default()
-        .plugin(tauri_plugin_vicons::init())
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
-}
-```
-
-### 3. Agregar el paquete JS (opcional)
+### Arch Linux (repo oficial)
 
 ```bash
-bun add @vasakgroup/plugin-vicons
+pacman -S vasak-tauri-plugin-vicons
 ```
 
-### 4. Configurar permisos
+### Debian / Ubuntu (.deb)
 
-En `src-tauri/capabilities/default.json`:
-
-```json
-{
-  "permissions": [
-    "vicons:default"
-  ]
-}
+```bash
+wget https://github.com/Vasak-OS/tauri-plugin-vicons/releases/download/v{{VERSION}}/vasak-tauri-plugin-vicons_{{VERSION}}_amd64.deb
+sudo apt install ./vasak-tauri-plugin-vicons_{{VERSION}}_amd64.deb
 ```
 
-## API
+### Desde fuente
 
-### Comandos Rust
+```bash
+git clone https://github.com/Vasak-OS/tauri-plugin-vicons.git
+cd tauri-plugin-vicons
 
-| Comando      | Descripción                                    | Retorno                  |
-|-------------|------------------------------------------------|--------------------------|
-| `get_icon`  | Obtiene un icono regular por nombre o ruta     | `String` (base64)        |
-| `get_symbol`| Obtiene un icono simbólico por nombre o ruta   | `String` (base64)        |
-| `has_icon`  | Si el tema tiene el icono regular, sin traerlo | `bool`                   |
-| `has_symbol`| Si el tema tiene el icono simbólico            | `bool`                   |
+# Build Rust (plugin Tauri)
+cargo build --release --locked
 
-Los cuatro aceptan un solo argumento `name: &str`. Si es una **ruta de archivo válida**, leen el archivo directamente. Si es un **nombre de icono GTK**, lo buscan en el tema de iconos del sistema.
+# Tests
+cargo test --locked
 
-`has_icon` y `has_symbol` hacen **la misma búsqueda** que su `get_` —mismo tamaño, mismas banderas—, así que un `true` garantiza que el `get_` correspondiente devuelve ese icono.
+# Publicar (crates.io + npm)
+cargo publish --locked
+npm publish
+```
 
-### Eventos emitidos
+### Flatpak / AppImage
 
-| Evento                    | Cuándo se emite                          | Payload |
-|---------------------------|------------------------------------------|---------|
-| `vicons:theme-changed`    | El tema de iconos del sistema cambió     | `null`  |
+> *Placeholder: añadir cuando exista paquete Flatpak o AppImage oficial.*
 
-Escucharlo desde el frontend:
+## Uso desde npm
+
+Publicado como `@vasakgroup/tauri-plugin-vicons` en npm.
+
+### Instalación
+
+```bash
+# Con bun (recomendado)
+bun add @vasakgroup/tauri-plugin-vicons
+
+# Con npm
+npm install @vasakgroup/tauri-plugin-vicons
+
+# Con pnpm
+pnpm add @vasakgroup/tauri-plugin-vicons
+```
+
+### Uso básico
 
 ```typescript
-import { listen } from "@tauri-apps/api/event";
+import { tauri_plugin_vicons } from '@vasakgroup/tauri-plugin-vicons';
 
-await listen("vicons:theme-changed", () => {
-  // recargar íconos, refrescar UI, etc.
-});
+// Inicializar el plugin en tu app Tauri
+const plugin = tauri_plugin_vicons();
+
+// Usar las APIs expuestas
+// Ver documentación completa en: https://docs.vasakos.org/plugins/vicons
 ```
 
-### Funciones JS (guest-js)
+### Documentación completa
 
-| Función            | Descripción                                                     | Retorno                |
-|-------------------|-----------------------------------------------------------------|------------------------|
-| `getIconSource`   | Obtiene un data URI completo listo para `<img src>`             | `string`               |
-| `getSymbolSource` | Igual que `getIconSource` pero con iconos simbólicos            | `string`               |
-| `getIcon`         | Obtiene solo el base64 de un icono regular (sin data URI)       | `Promise<string>`      |
-| `getSymbol`       | Obtiene solo el base64 de un icono simbólico (sin data URI)     | `Promise<string>`      |
-| `hasIcon`         | Si el tema tiene el icono, para elegir antes de dibujar          | `Promise<boolean>`     |
-| `hasSymbol`       | Igual que `hasIcon` pero con iconos simbólicos                   | `Promise<boolean>`     |
+- **Referencia API:** [docs.vasakos.org/plugins/vicons](https://docs.vasakos.org/plugins/vicons)
+- **Changelog:** [GitHub Releases](https://github.com/Vasak-OS/tauri-plugin-vicons/releases)
+- **Ejemplos:** [vasak-apps](https://github.com/Vasak-OS/vasak-apps/tree/main/examples/vicons)
 
-`getIconSource` y `getSymbolSource` detectan automáticamente el **tipo MIME** del icono (PNG, JPEG, GIF, WebP, BMP, SVG) mediante magic bytes.
+---
 
-### Por qué hacen falta `hasIcon` y `hasSymbol`
+## Uso rápido
 
-`getIconSource` y `getSymbolSource` **no fallan** cuando el icono no está: el tema
-devuelve `image-missing` —el cuadrito de imagen rota— como si fuera el icono pedido, y lo
-que llega es un data URI perfectamente válido. Comprobar el resultado no alcanza, porque
-nunca está vacío:
-
-```typescript
-import { getSymbolSource, hasSymbol } from '@vasakgroup/plugin-vicons';
-
-// Mal: `icono` nunca es "", así que el `if` no protege de nada.
-const icono = await getSymbolSource('google-symbolic');
-if (icono) mostrar(icono); // dibuja el cuadrito si el tema no lo tiene
-
-// Bien: se pregunta primero y se elige otro nombre si falta.
-const nombre = (await hasSymbol('google-symbolic'))
-  ? 'google-symbolic'
-  : 'goa-account-symbolic';
-mostrar(await getSymbolSource(nombre));
+```bash
+# Se lanza automáticamente (systemd --user) o manualmente:
+tauri-plugin-vicons
 ```
 
-Ante un error del plugin contestan `false`, no una excepción: quien pregunta esto lo hace
-para elegir un icono alternativo, y caer al alternativo es lo razonable. El error queda en
-la consola.
+### Atajos / flags principales
 
-## Uso
+| Acción | Comando / Tecla |
+|--------|-----------------|
+| Acción principal | `tauri-plugin-vicons` |
+| Configuración | `tauri-plugin-vicons --config` |
+| Ayuda | `tauri-plugin-vicons --help` |
 
-### Básico
+> **Captura:** `assets/demo.gif` *(placeholder — sustituir por GIF real)*
 
-```typescript
-import { getIconSource } from '@vasakgroup/plugin-vicons';
+---
 
-const icon = await getIconSource('folder');
-// → "data:image/svg+xml;base64,PHN2ZyB4bWxucz0..."
+## Configuración
+
+### Archivo de configuración
+
+```
+~/.config/vasak/tauri-plugin-vicons.toml
 ```
 
-### Con Vue
+### Variables de entorno
 
-```vue
-<script setup lang="ts">
-import { getIconSource } from '@vasakgroup/plugin-vicons';
-import { ref, onMounted } from 'vue';
+| Variable | Descripción | Por defecto |
+|----------|-------------|-------------|
+| `VASAK_DEBUG` | Activa logs de depuración en consola | `false` |
+| `VASAK_PROFILE` | Perfil de rendimiento: `balanced`, `performance`, `power-save` | `balanced` |
 
-const icon = ref('');
-onMounted(async () => {
-  icon.value = await getIconSource('folder');
-});
-</script>
+### Integración con `tauri-plugin-config-manager`
 
-<template>
-  <img :src="icon" alt="folder" />
-</template>
+- Esquemas de color: respeta `--ui-primary`, `--ui-surface`, `--ui-focus`, `--ui-on-surface`, `--ui-border`
+- Tema de iconos: usa el tema del sistema (`vasakos-icon-theme`) vía `vicon` lookup
+- Radio de bordes: variable CSS `--ui-radius` del esquema activo (por defecto 12px)
+- Fuentes: `--ui-font-family`, `--ui-font-size-base` desde el esquema
+
+---
+
+## Desarrollo
+
+### Requisitos
+
+- **Rust:** `rustup` toolchain estable (`rust-toolchain.toml` fija la versión)
+- **Node / bun:** `bun` ≥ 1.1 (nunca npm/yarn/pnpm para apps Tauri)
+- **Sistema:** `pkg-config`, `libgtk-3-dev`, `libwebkit2gtk-4.1-dev`, `libssl-dev`
+- *`libssl-dev` para TLS, dependencias específicas del plugin*
+
+### Dependencias de desarrollo
+
+#### Sistema (paquetes Arch / Debian / Fedora)
+
+`base-devel`, `pkgconf`, `libssl-dev`, `libwebkit2gtk-4.1-dev`, `libgtk-3-dev`, `libayatana-appindicator3-dev`, `librsvg2-dev`, `gstreamer1.0-plugins-base`, `gstreamer1.0-plugins-good`, `libpipewire-0.3-dev`, `libwireplumber-0.5-dev`, `libdbus-1-dev`, `libudev-dev`, `libxkbcommon-dev`, `libwayland-dev`, `meson`, `ninja`, `clang`, `lld`
+
+#### Rust
+
+`rustup` → `stable` + `rustfmt` + `clippy`
+
+#### Node
+
+**Solo `bun`** (nunca npm/yarn/pnpm para apps Tauri). `bun --version` ≥ 1.1
+
+#### Herramientas CLI
+
+`just` (command runner), `cargo-binstall` (opcional), `cargo-llvm-cov` (para cobertura)
+
+### Correr la app en desarrollo
+
+```bash
+# Frontend (Vite dev server + Tauri dev)
+bun run tauri dev
+
+# Solo frontend (Vite)
+bun run dev
+
+# Solo backend (cargo watch)
+cargo watch -x "run --bin tauri-plugin-vicons"
 ```
 
-### Con React
+### Compilar / Build de release
 
-```tsx
-import { getIconSource } from '@vasakgroup/plugin-vicons';
-import { useEffect, useState } from 'react';
+```bash
+# Build completo (frontend + backend + bundle)
+bun run tauri build
 
-function FolderIcon() {
-  const [src, setSrc] = useState('');
-  useEffect(() => {
-    getIconSource('folder').then(setSrc);
-  }, []);
-  return <img src={src} alt="folder" />;
-}
+# Solo frontend (para testear bundle después)
+bun run build
+
+# Solo backend Rust (binario optimizado)
+cargo build --release --locked
+
+# Paquetes nativos
+# Arch: makepkg -sf en PKGBUILDS/tauri-plugin-vicons/
+# Debian: cargo deb --no-build --target-dir src-tauri/target/release/debian
 ```
 
-### Ruta de archivo directa
+### Targets principales
 
-Si pasás una ruta de archivo existente, se lee directamente sin pasar por el tema GTK:
+```bash
+# Desarrollo (Tauri dev server + hot reload)
+bun run dev
 
-```typescript
-const icon = await getIconSource('/usr/share/icons/hicolor/48x48/apps/firefox.png');
+# Build producción
+bun run build
+
+# Solo frontend
+bun run build:frontend
+
+# Solo backend Rust
+cargo build --release --locked
+
+# Lint + tipos (pre-commit / CI)
+bunx --bun biome check .
+bunx vue-tsc --noEmit
+cargo fmt --check
 ```
 
-### Escuchar cambios de tema
+### Pruebas
 
-El plugin detecta automáticamente cambios en el tema de iconos del sistema (a través de la señal `changed` de GTK) y emite un evento:
+```bash
+# Tests Rust
+cargo test -p tauri-plugin-vicons --locked
 
-```typescript
-import { listen } from "@tauri-apps/api/event";
-import { getIconSource } from '@vasakgroup/plugin-vicons';
-
-listen("vicons:theme-changed", async () => {
-  console.log("Theme changed, refreshing icons...");
-  const icon = await getIconSource('folder');
-  // actualizar UI con el nuevo icono
-});
+# Tests JS (si tiene bindings)
+bun test
 ```
 
-## Arquitectura
+### Convención de commits
 
-```mermaid
-flowchart TB
-    subgraph Frontend
-        A[getIconSource / getSymbolSource] --> B[getIconType<br/>magic bytes PNG/JPEG/GIF/WebP/BMP/SVG]
-        O[hasIcon / hasSymbol]
-        C[listen 'vicons:theme-changed']
-    end
+[Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/):
 
-    subgraph Backend
-        D[get_icon_impl / get_symbol_impl] --> E{¿ruta válida?}
-        E -->|sí| F[leer archivo]
-        E -->|no| G[buscar en GTK IconTheme]
-        G --> H{¿cache hit?}
-        H -->|sí + vigente| I[devolver cache]
-        H -->|no o expirado| J[GTK lookup → base64 → guardar cache]
-        J -.->|sin resultado| J2[image-missing<br/>el cuadrito, indistinguible del icono real]
+```
+<tipo>(<ámbito>): <descripción corta>
 
-        P[has_icon_impl / has_symbol_impl] --> E2{¿ruta válida?}
-        E2 -->|sí| P1[true]
-        E2 -->|no| P2[mismo GTK lookup, sin traer el archivo]
-        P2 --> P3{¿hubo resultado?}
-    end
+[cuerpo opcional]
 
-    subgraph ThemeMonitor
-        K[init_theme_monitor] --> L[connect_changed GTK signal]
-        L --> M[clear_cache_internal]
-        M --> N[emit 'vicons:theme-changed']
-    end
-
-    A --> D
-    O[hasIcon / hasSymbol] --> P
-    N -.->|Tauri event| C
+[pie opcional: Closes #N]
 ```
 
-### Cache
+Tipos habituales: `feat`, `fix`, `bugfix`, `docs`, `ci`, `chore`, `security`, `refactor`, `perf`, `test`.
 
-- Dos cachés separadas: `ICON_CACHE` y `SYMBOL_CACHE` (`HashMap<String, CacheEntry>`).
-- Cada entrada expira después de **30 minutos**.
-- Al cambiar el tema de iconos del sistema, **ambos cachés se limpian por completo**.
-- La caché usa `std::sync::LazyLock` y `std::sync::Mutex` (sin dependencias externas).
+### Cómo abrir PR
 
-### Detección de cambios de tema
+1. Rama desde `origin/main`:
+   ```bash
+   git worktree add -b feat/tema ~/wt/tauri-plugin-vicons-tema origin/main
+   ```
+2. Prefijos de rama: `fix/`, `feat/`, `bugfix/`, `docs/`, `ci/`, `chore/`, `security/`
+3. Escribe el fix → **`qa` escribe las pruebas** (fallan sin el fix) → suite verde → abre PR
+4. Al abrir PR, **cuatro cosas obligatorias**:
+   - Asignado a `JoaquinDecima`
+   - Etiqueta `enhancement` o `bug` (+ `ci` / `dependencies` si aplica)
+   - Añadido al proyecto «VasakOS Roadmap»
+   - Status **In Progress**
 
-GTK monitorea internamente los cambios de tema mediante:
+---
 
-- **GSettings** (`org.gnome.desktop.interface icon-theme`)
-- **inotify** sobre `~/.config/gtk-3.0/settings.ini`
-- **XDG Desktop Portal**
+## Arquitectura (texto)
 
-Cuando detecta un cambio, dispara la señal `changed` del `IconTheme`. El plugin la captura, limpia la caché, y emite `vicons:theme-changed` al frontend.
+### Crates / módulos principales
 
-### Logging
+| `tauri-plugin-vicons` | Plugin Tauri: Rust backend + JS bindings |
 
-El plugin escribe logs en `{app_data_dir}/logs/icons.log` con niveles INFO, WARN y ERROR. Sin dependencias externas de logging — usa `std::io::LineWriter` directo a archivo.
+### Interfaces D-Bus / zbus expuestas
 
-## Errores
+| `org.vasak.vicons` | Métodos específicos del plugin | Funcionalidad expuesta a apps Tauri |
 
-| Error               | Causa                                       |
-|---------------------|---------------------------------------------|
-| `IconNotFound`      | El nombre solicitado no existe en el tema   |
-| `ThemeMonitorError` | No se pudo inicializar el monitor de tema   |
-| `Io`                | Error de lectura de archivo                 |
+### Puntos de extensión
 
-## Dependencias
+- **Plugins:** Sistema de plugins modular
+- **Hooks:** Hooks de ciclo de vida
+- **API pública Rust:** API pública del crate principal
 
-Solo 5 crates además de Tauri:
+### Features / Cargo features
 
-| Crate       | Propósito                     |
-|------------|-------------------------------|
-| `serde`    | Serialización                 |
-| `thiserror`| Errores tipados               |
-| `gtk`      | Acceso al theme de iconos GTK |
-| `glib`     | Bindings de GLib (con GTK)    |
-| `base64`   | Codificación base64           |
+| Feature | Descripción | Default |
+|---------|-------------|---------|
+| `async` | API asíncrona (futures) | ✓ |
+| `blocking` | API bloqueante para compatibilidad | |
+
+Y para apps Tauri+Vue: features del `tauri.conf.json` → `bundle` / `plugins` / `allowlist` (capabilities).
+
+---
+
+## Pruebas y calidad
+
+- **Cobertura objetivo:** ≥ 80 % del código nuevo (SonarCloud Quality Gate)
+- **Informes:** GitHub Actions → pestaña *SonarCloud Code Analysis* → enlace a SonarCloud
+- **Añadir pruebas:** ver `AGENTS.md` sección 9 (mapa de repos y comandos de prueba)
+- **Regla:** toda corrección lleva prueba escrita por `qa` que falla sin el fix
+
+---
+
+## Contribuir
+
+- **Guía:** [.github/CONTRIBUTING.md](https://github.com/Vasak-OS/.github/blob/main/CONTRIBUTING.md)
+- **Plantillas de issue:** [.github/ISSUE_TEMPLATE/](https://github.com/Vasak-OS/.github/tree/main/ISSUE_TEMPLATE)
+- **Código de conducta:** [CODE_OF_CONDUCT.md](https://github.com/Vasak-OS/.github/blob/main/CODE_OF_CONDUCT.md)
+
+---
+
+## Contribuidores
+
+> **Actualizado automáticamente en CI** — muestra los avatares de quienes han aportado código a este repo.
+
+<div align="center">
+  <a href="https://github.com/JoaquinDecima" target="_blank"><img src="https://avatars.githubusercontent.com/u/11674229?v=4&s=40" width="40" height="40" alt="JoaquinDecima" style="border-radius: 50%; margin: 2px;" title="JoaquinDecima (70 contribuciones)"></a>
+</div>
+
+[Ver todos los contribuidores](https://github.com/Vasak-OS/tauri-plugin-vicons/graphs/contributors)
+
+---
+
+## Donadores / Sponsors
+
+[![Sponsors](https://img.shields.io/github/sponsors/Vasak-OS?style=flat&label=Sponsors)](https://github.com/sponsors/Vasak-OS)
+
+> **Backers:** *Actualizado automáticamente en CI desde GitHub Sponsors / OpenCollective / Polar.*
+
+[💖 Donar al proyecto](https://github.com/sponsors/Vasak-OS)
+
+---
 
 ## Licencia
 
-GPLv3 — Vasak Group
+`GPL-3.0` — Copyright © 2026 **Vasak-OS Contributors**
+
+[Ver licencia completa](LICENSE)
